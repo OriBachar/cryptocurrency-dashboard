@@ -1,0 +1,239 @@
+{
+    "info": {
+        "name": "Cryptocurrency Dashboard API",
+        "description": "A robust, real-time cryptocurrency tracking and analysis platform powered by advanced AI insights.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "description": "User authentication and management endpoints",
+            "item": [
+                {
+                    "name": "Register User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"securePassword123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "register"]
+                        },
+                        "description": "Register a new user account"
+                    }
+                },
+                {
+                    "name": "Login User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"securePassword123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        },
+                        "description": "Authenticate existing user and get JWT token"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Cryptocurrencies",
+            "description": "Cryptocurrency market data endpoints",
+            "item": [
+                {
+                    "name": "Get All Cryptocurrencies",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/cryptos",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "cryptos"]
+                        },
+                        "description": "List all cryptocurrencies"
+                    }
+                },
+                {
+                    "name": "Get Crypto by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/cryptos/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "cryptos", ":id"],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "{{crypto_id}}",
+                                    "description": "Cryptocurrency identifier"
+                                }
+                            ]
+                        },
+                        "description": "Get detailed information for a specific cryptocurrency"
+                    }
+                },
+                {
+                    "name": "Refresh Crypto Data",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/cryptos/refresh",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "cryptos", "refresh"]
+                        },
+                        "description": "Force refresh of cryptocurrency data (rate limited: 1 request/minute)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Watchlist",
+            "description": "Watchlist management endpoints",
+            "item": [
+                {
+                    "name": "Get Watchlist",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/watchlist",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "watchlist"]
+                        },
+                        "description": "Retrieve user's watchlist"
+                    }
+                },
+                {
+                    "name": "Add to Watchlist",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"cryptoId\": \"{{crypto_id}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/watchlist",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "watchlist"]
+                        },
+                        "description": "Add cryptocurrency to watchlist"
+                    }
+                },
+                {
+                    "name": "Remove from Watchlist",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/watchlist/:cryptoId",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "watchlist", ":cryptoId"],
+                            "variable": [
+                                {
+                                    "key": "cryptoId",
+                                    "value": "{{crypto_id}}",
+                                    "description": "Cryptocurrency identifier to remove"
+                                }
+                            ]
+                        },
+                        "description": "Remove cryptocurrency from watchlist"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Analysis",
+            "description": "AI-powered cryptocurrency analysis endpoints",
+            "item": [
+                {
+                    "name": "Get Crypto Analysis",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/analysis/crypto/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "analysis", "crypto", ":id"],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "{{crypto_id}}",
+                                    "description": "Cryptocurrency identifier for analysis"
+                                }
+                            ]
+                        },
+                        "description": "Get AI-powered analysis including price predictions, market sentiment, technical indicators, and trading recommendations"
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://127.0.0.1:3000",
+            "type": "string"
+        },
+        {
+            "key": "jwt_token",
+            "value": "your_jwt_token_here",
+            "type": "string"
+        },
+		{
+			"key": "crypto_id",
+			"value": "your_crypto_id_here",
+			"type": "string"
+		}
+    ]
+}
