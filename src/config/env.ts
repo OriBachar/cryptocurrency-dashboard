@@ -2,29 +2,37 @@ import dotenv from 'dotenv';
 import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
+const getEnv = (key: string, required = false): string => {
+    const value = process.env[key];
+    if (required && !value) {
+        throw new Error(`Environment variable ${key} is required`);
+    }
+    return value || '';
+}
+
 export const config = {
-    port: process.env.PORT,
+    server:{
+        port: getEnv('PORT') || '3000',
+        env:  getEnv('NODE_ENV') || 'development',
+        whitelist: getEnv('CORS_WHITELIST') ? getEnv('CORS_WHITELIST').split(',') : []
+    },
     mongodb: {
-        uri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017',
-        dbName: process.env.DB_NAME || 'mydb'
+        uri: getEnv('MONGODB_URI' , true),
+        dbName: getEnv('DB_NAME', true)
     },
     jwt: {
-        secret: process.env.JWT_SECRET || (() => {
-            throw new Error('JWT_SECRET environment variable is required')
-        })()
+        secret:  getEnv('JWT_SECRET', true)
     },
     aws: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        region: process.env.AWS_REGION,
-        s3Bucket: process.env.AWS_S3_BUCKET
+        accessKeyId: getEnv('AWS_ACCESS_KEY_ID'),
+        secretAccessKey: getEnv('AWS_SECRET_ACCESS_KEY'),
+        region: getEnv('AWS_REGION'),
+        s3Bucket: getEnv('AWS_S3_BUCKET')
     },
     coinGecko: {
-        apiKey: process.env.COINGECKO_API_KEY
+        apiKey: getEnv('COINGECKO_API_KEY')
     },
     gemini: {
-        apiKey: process.env.GEMINI_API_KEY || (() => {
-            throw new Error('GEMINI_API_KEY environment variable is required')
-        })()
+        apiKey: getEnv('GEMINI_API_KEY', true)
     }
 };

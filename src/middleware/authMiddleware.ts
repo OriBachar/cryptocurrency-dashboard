@@ -11,9 +11,9 @@ export const auth: RequestHandler = async (req, res, next) => {
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, config.jwt.secret) as { email: string };
+        const decoded = jwt.verify(token, config.jwt.secret) as { userId: string, email: string }
         
-        const user = await User.findOne({ email: decoded.email });
+        const user = await User.findById(decoded.userId);
 
         if (!user) {
             return res.status(401).json({ error: 'Invalid token' });
