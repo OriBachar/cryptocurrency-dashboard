@@ -1,11 +1,13 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import { AppError } from '../types/error';
+
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const getEnv = (key: string, required = false): string => {
     const value = process.env[key];
     if (required && !value) {
-        throw new Error(`Environment variable ${key} is required`);
+        throw new AppError(`Environment variable ${key} is required`, 500);
     }
     return value || '';
 }

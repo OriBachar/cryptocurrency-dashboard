@@ -1,25 +1,61 @@
 import { RequestHandler } from 'express';
 import { registerSchema, loginSchema } from '../types/auth';
-import { handleValidationError } from '../utils/validationUtils';
+import { ZodError } from 'zod';
+import { AppError } from '../types/error';
+import { asyncHandler } from '../utils/asyncHandler';
 
-export const validateRegister: RequestHandler = async (req, res, next) => {
+export const validateRegister = asyncHandler(async (req, res, next) => {
     try {
         await registerSchema.parseAsync({
             body: req.body,
         });
         next();
     } catch (error) {
-        handleValidationError(error, res);
-    }
-};
+        if (error instanceof ZodError) {
+            const formattedErrors = error.errors.map(err => ({
+                field: err.path.join('.'),
+                message: err.message
+            }));
 
-export const validateLogin: RequestHandler = async (req, res, next) => {
+
+            next(new AppError(
+                'Validation failed',
+                400,
+                true,
+                { errors: formattedErrors }
+            ));
+            return;
+            
+        }
+
+        next(new AppError('Validation processing failed', 500));
+
+    };
+});
+
+export const validateLogin: RequestHandler = asyncHandler(async (req, res, next) => {
     try {
         await loginSchema.parseAsync({
             body: req.body,
         });
         next();
     } catch (error) {
-        handleValidationError(error, res);
+        if (error instanceof ZodError) {
+            const formattedErrors = error.errors.map(err => ({
+                field: err.path.join('.'),
+                message: err.message
+            }));
+
+
+            next(new AppError(
+                'Validation failed',
+                400,
+                true,
+                { errors: formattedErrors }
+            ));
+            return;
+        }
+        
+        next(new AppError('Validation processing failed', 500));
     }
-};
+});

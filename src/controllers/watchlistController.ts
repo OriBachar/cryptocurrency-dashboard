@@ -4,6 +4,8 @@ import { User } from '../models/User';
 import { Crypto } from '../models/Crypto';
 import { getCryptocurrencyById } from '../services/cryptoAPI';
 import mongoose from 'mongoose';
+import { asyncHandler } from '../utils/asyncHandler';
+import { AppError } from '../types/error';
 
 declare global {
     namespace Express {
@@ -20,70 +22,78 @@ type WatchlistItem = {
     addedAt?: Date;
 };
 
-export const getWatchlist: RequestHandler = async (req, res, next) => {
-    try {
-        res.status(200).json(req.user.watchlist);
-    } catch (error) {
-        next(error);
+export const getWatchlist: RequestHandler = asyncHandler(async (req, res) => {
+    res.status(200).json({
+        status: 'success',
+        data: req.user.watchlist
+    });
+});
+
+export const addToWatchlist: RequestHandler = asyncHandler(async (req, res) => {
+    const { cryptoId } = req.body;
+    
+    if (!cryptoId) {
+        throw new AppError('Cryptocurrency ID is required', 400);
     }
-}
+    
+    let crypto = await Crypto.findOne({ id: cryptoId });
 
-
-export const addToWatchlist: RequestHandler = async (req, res, next) => {
-    try {
-        const { cryptoId } = req.body;
-        
-        let crypto = await Crypto.findOne({ id: cryptoId });
-
-        if (!crypto) {
-            const newCrypto = await getCryptocurrencyById(cryptoId);
-            if (!newCrypto) {
-                return res.status(404).json({ error: 'Cryptocurrency not found' });
-            }
-            crypto = await new Crypto(newCrypto).save();
+    if (!crypto) {
+        const newCrypto = await getCryptocurrencyById(cryptoId);
+        if (!newCrypto) {
+            throw new AppError('Cryptocurrency not found', 404);
         }
-
-        const alreadyInWatchlist = req.user.watchlist.some(
-            (item: WatchlistItem) => item.id === cryptoId
-        );
-
-        if (alreadyInWatchlist) {
-            return res.status(400).json({ error: 'Cryptocurrency already in watchlist' });
-        }
-
-        req.user.watchlist.push( {
-            crypto: new mongoose.Types.ObjectId(crypto._id),
-            name: crypto.name,
-            id: crypto.id,
-            addedAt: new Date()
-        });
-        
-        await req.user.save();
-        res.status(200).json(`Cryptocurrency ${cryptoId} added to watchlist`);
-    } catch (error) {
-        next(error);
+        crypto = await new Crypto(newCrypto).save();
     }
-}
 
-export const removeFromWatchlist: RequestHandler = async (req, res, next) => {
-    try {
-        const { cryptoId } = req.body;
+    const alreadyInWatchlist = req.user.watchlist.some(
+        (item: WatchlistItem) => item.id === cryptoId
+    );
 
-        const cryptoInWatchlist = req.user.watchlist.some(
-            (item: WatchlistItem) => item.id === cryptoId
-        );
-
-        if (!cryptoInWatchlist) {
-            return res.status(404).json({ error: 'Cryptocurrency not found in watchlist' });
-        }
-
-        req.user.watchlist = req.user.watchlist.filter(
-            (item: WatchlistItem) => item.id !== cryptoId
-        );
-        
-        await req.user.save();
-        res.status(200).json(`Cryptocurrency ${cryptoId} removed from watchlist`);
-    } catch (error) {
-        next(error);
+    if (alreadyInWatchlist) {
+        throw new AppError('Cryptocurrency already in watchlist', 400);
     }
-}
+
+    req.user.watchlist.push({
+        crypto: new mongoose.Types.ObjectId(crypto._id),
+        name: crypto.name,
+        id: crypto.id,
+        addedAt: new Date()
+    });
+    
+    await req.user.save();
+
+    res.status(200).json({
+        status: 'success',
+        message: `Cryptocurrency ${cryptoId} added to watchlist`,
+        data: req.user.watchlist
+    });
+});
+
+export const removeFromWatchlist: RequestHandler = asyncHandler(async (req, res) => {
+    const { cryptoId } = req.body;
+
+    if (!cryptoId) {
+        throw new AppError('Cryptocurrency ID is required', 400);
+    }
+
+    const cryptoInWatchlist = req.user.watchlist.some(
+        (item: WatchlistItem) => item.id === cryptoId
+    );
+
+    if (!cryptoInWatchlist) {
+        throw new AppError('Cryptocurrency not found in watchlist', 404);
+    }
+
+    req.user.watchlist = req.user.watchlist.filter(
+        (item: WatchlistItem) => item.id !== cryptoId
+    );
+    
+    await req.user.save();
+
+    res.status(200).json({
+        status: 'success',
+        message: `Cryptocurrency ${cryptoId} removed from watchlist`,
+        data: req.user.watchlist
+    });
+});

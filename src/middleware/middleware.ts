@@ -8,15 +8,16 @@ import compression from 'compression';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
 import { config } from '../config/env';
+import { AppError } from '../types/error';
 
 const app = express();
-
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: 'Too many requests from this IP, please try again later',
-
+    handler: (_req, _res) => {
+        throw new AppError('Too many requests from this IP, please try again later', 429);
+    }
 });
 app.use(limiter);
 
@@ -33,23 +34,28 @@ app.use(cors({
         if (!origin || config.server.whitelist.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS'));
+            callback(new AppError('Not allowed by CORS', 403));
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ 
+    limit: '10mb',
+    verify: (req, _res, buf) => {
+        try {
+            JSON.parse(buf.toString());
+        } catch (e) {
+            throw new AppError('Invalid JSON payload', 400);
+        }
+    }
+}));
+
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use(mongoSanitize());
 app.use(hpp());
-
-app.use((req, res, next) => {
-    console.log(`Request Method: ${req.method}, Path: ${req.path}`);
-    next();
-});
 
 if (config.server.env === 'development') {
     app.use(errorHandler());
